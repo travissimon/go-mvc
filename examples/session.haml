@@ -1,0 +1,46 @@
+@import (
+)
+
+@data_type: int
+
+%html
+  %head
+    %title MVC Example
+  %body
+    %style
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+        background: #ddd
+      }
+      \#content {
+        width: 80%;
+        background: #fff;
+        border-color: #333;
+        margin: 20px;
+        padding: 10px;
+        \-webkit-border-radius: 10px;
+        \-moz-border-radius: 10px;
+        border-radius: 10px;
+      }
+      pre, code {
+          font-family: Menlo, monospace;
+          font-size: 14px;
+      }
+      pre {
+          line-height: 18px;
+      }
+    #content
+      %h1= "You have visited this page ", data, " times"
+
+      %div 
+        <a href="/">Click here</a> to reload this page to see
+        the magic of sessions.
+
+      %div
+        Go MVC also provides easy-to-use <a href="/Hey/Mvc User">parameterised routes</a>.
+
+      %p Dynamic processing:
+      %ol
+        - for i := 0; i < 10; i++ {
+          %li= "Item: ", (i + 1)
+        - }

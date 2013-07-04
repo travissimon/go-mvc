@@ -1,0 +1,53 @@
+@import (
+)
+
+@data_type: string
+
+%html
+  %head
+    %title= "Hey, ", data
+  %body
+    %style
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+        background: #ddd
+      }
+      \#content {
+        width: 80%;
+        background: #fff;
+        border-color: #333;
+        margin: 20px;
+        padding: 10px;
+        \-webkit-border-radius: 10px;
+        \-moz-border-radius: 10px;
+        border-radius: 10px;
+      }
+      pre, code {
+          font-family: Menlo, monospace;
+          font-size: 14px;
+      }
+      pre {
+          line-height: 18px;
+      }
+    #content
+      %h1= "Hey, ", data
+
+      %p
+        This page demostrates the use of parameterised routes. The controller for
+        this page defines this route as "/Hey/{name}". 
+
+      %p
+        In the controller, the developer
+        accesses this paramer by name, like this:
+
+       %code
+        name := params.Get("name")
+
+       %p
+         Here are some other exciting URLs to try:
+         %ul
+           %li <a href="/Hey/World">/Hey/World</a>
+           %li <a href="/Hey/">/Hey</a> (default value set in controller)
+
+       %p
+         Return <a href="/">home</a>
