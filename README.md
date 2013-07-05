@@ -60,3 +60,18 @@ The code above could be tested like this:
 		    t.Error("Data not as expected: " + hamlRes.Data)
 		}
     }
+
+Sessions
+========
+
+Go-MVC provides server-side sessions transparently. As a developer you 
+just add and remove items from the session:
+
+	var val interface{}
+	if val, exists = ctx.Session.Get("count"); !exists {
+		val = -1
+	}
+
+	count := val.(int)
+	count++
+	ctx.Session.Put("count", count)
