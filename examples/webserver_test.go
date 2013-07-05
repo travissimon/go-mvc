@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/travissimon/mvc"
+	"github.com/travissimon/go-mvc"
 	"log"
 	"net/url"
 	"testing"
@@ -11,9 +11,9 @@ func Test_WebserverHookup(t *testing.T) {
 	log.Printf("Hookup Succeeded - testing Controllers")
 }
 
-func Test_Index(t *testing.T) {
-	ctx := NewWebContext(nil, nil, NewSession("test"))
-	res := MvcTest(ctx, nil)
+func SessionController_Test(t *testing.T) {
+	ctx := mvc.NewWebContext(nil, nil, mvc.NewSession("test"))
+	res := SessionController(ctx, nil)
 
 	// check that 'count' has been set in the session
 	val, exists := ctx.Session.Get("count")
@@ -22,26 +22,26 @@ func Test_Index(t *testing.T) {
 	}
 
 	// check that our output data is correct
-	hRes := res.(*HamlResult)
+	hRes := res.(*mvc.HamlResult)
 	if hRes.Data != 0 {
 		t.Error("Data not as expected: %s")
 	}
 }
 
-func Test_Hey(t *testing.T) {
-	ctx := NewWebContext(nil, nil, nil)
+func GreetingController_Test(t *testing.T) {
+	ctx := mvc.NewWebContext(nil, nil, nil)
 	params := url.Values{}
 
-	res := Hey(ctx, params)
+	res := GreetingController(ctx, params)
 
-	hamlRes := res.(*HamlResult)
+	hamlRes := res.(*mvc.HamlResult)
 	if hamlRes.Data != "there" {
 		t.Error("Data is not 'there'")
 	}
 
 	params.Add("name", "test")
-	res = Hey(ctx, params)
-	hamlRes = res.(*HamlResult)
+	res = GreetingController(ctx, params)
+	hamlRes = res.(*mvc.HamlResult)
 
 	if hamlRes.Data != "test" {
 		t.Error("Data is not 'test'")
