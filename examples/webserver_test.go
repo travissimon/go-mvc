@@ -12,7 +12,7 @@ func Test_WebserverHookup(t *testing.T) {
 }
 
 func SessionController_Test(t *testing.T) {
-	ctx := mvc.NewWebContext(nil, nil, mvc.NewSession("test"))
+	ctx, params := mvc.GetTestControllerParameters()
 	res := SessionController(ctx, nil)
 
 	// check that 'count' has been set in the session
@@ -29,9 +29,7 @@ func SessionController_Test(t *testing.T) {
 }
 
 func GreetingController_Test(t *testing.T) {
-	ctx := mvc.NewWebContext(nil, nil, nil)
-	params := url.Values{}
-
+	ctx, params := mvc.GetTestControllerParameters()
 	res := GreetingController(ctx, params)
 
 	hamlRes := res.(*mvc.HamlResult)

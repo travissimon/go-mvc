@@ -2,19 +2,28 @@ package mvc
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"net/url"
 )
 
 // This needs to be moved
 type WebContext struct {
+	mvcHandler     *MvcHandler
 	ResponseWriter http.ResponseWriter
 	Request        *http.Request
 	Session        *Session
 }
 
-func NewWebContext(w http.ResponseWriter, r *http.Request, s *Session) *WebContext {
+func GetTestControllerParameters() (ctx *WebContext, params url.Values) {
+	ctx = NewWebContext(nil, nil, nil, NewSession("Test Session"))
+	params = url.Values{}
+	return
+}
+
+func NewWebContext(m *MvcHandler, w http.ResponseWriter, r *http.Request, s *Session) *WebContext {
 	return &WebContext{
+		mvcHandler:     m,
 		ResponseWriter: w,
 		Request:        r,
 		Session:        s,
@@ -37,6 +46,7 @@ func NewMvcHandler() *MvcHandler {
 		Routes:          NewRouteHandler(),
 		Sessions:        NewSessionManager(),
 		SessionsEnabled: true,
+		Templates:       nil,
 		NotFoundHandler: NotFoundFunc,
 	}
 }
@@ -51,12 +61,19 @@ type MvcHandler struct {
 	Routes          *RouteHandler
 	Sessions        *SessionManager
 	SessionsEnabled bool
+	Templates       *template.Template // Go Html Templates
 	NotFoundHandler func(http.ResponseWriter, *http.Request)
 }
 
 // Adds a new route to the MVC handler
 func (mvc *MvcHandler) AddRoute(name string, path string, method HttpMethod, controllerFunc ControllerFunc) {
 	mvc.Routes.AddNewRoute(name, path, method, controllerFunc)
+}
+
+// Adds all Templates to the MVC Hanlder.
+// Template value should be the result of calling 'template.ParseFiles(...)'
+func (mvc *MvcHandler) SetTemplates(template *template.Template) {
+	mvc.Templates = template
 }
 
 // Main handler function, responsible for multiplexing routes and
@@ -80,7 +97,7 @@ func (mvc *MvcHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		session = mvc.Sessions.GetSession(w, r)
 	}
 
-	ctx := NewWebContext(w, r, session)
+	ctx := NewWebContext(mvc, w, r, session)
 
 	result := route.Controller(ctx, params)
 
@@ -116,7 +133,7 @@ type HamlResult struct {
 	Context  *WebContext
 }
 
-// Execute method for a Haml template
+// ControllerResult Execute() method for a Haml template
 func (h *HamlResult) Execute() {
 	tmpl := h.Template
 	ctx := *h.Context
@@ -129,5 +146,32 @@ func Haml(templ HamlTemplate, data interface{}, ctx *WebContext) ControllerResul
 		Template: templ,
 		Data:     data,
 		Context:  ctx,
+	}
+}
+
+// Template result for combining go Templates with a data itme
+type TemplateResult struct {
+	TemplateName string
+	Data         interface{}
+	Context      *WebContext
+}
+
+// ControllerResult Execute() method for a Haml template
+func (t *TemplateResult) Execute() {
+	templateName := t.TemplateName
+	ctx := *t.Context
+	templates := *ctx.mvcHandler.Templates
+
+	err := templates.ExecuteTemplate(ctx.ResponseWriter, templateName, t.Data)
+	if err != nil {
+		http.Error(ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func Template(templateName string, data interface{}, ctx *WebContext) ControllerResult {
+	return &TemplateResult{
+		TemplateName: templateName,
+		Data:         data,
+		Context:      ctx,
 	}
 }

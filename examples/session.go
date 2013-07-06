@@ -50,6 +50,7 @@ func (wr *SessionWriter) ExecuteData(w http.ResponseWriter, r *http.Request, dat
 			</h1>
 			<div> <a href="/">Click here</a> to reload this page to see the magic of sessions.</div>
 			<div> Go MVC also provides easy-to-use <a href="/Hey/Mvc User">parameterised routes</a>.</div>
+			<div> You can also use <a href="/Article">go templates</a></div>
 			<p>Dynamic processing:</p>
 			<ol>
 				`)

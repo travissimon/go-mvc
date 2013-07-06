@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/travissimon/go-mvc"
+	"html/template"
 	"net/http"
 	"net/url"
 )
@@ -32,12 +33,41 @@ func GreetingController(ctx *mvc.WebContext, params url.Values) mvc.ControllerRe
 	return mvc.Haml(wr, name, ctx)
 }
 
-func main() {
-	fmt.Println("Listening on: http://localhost:4040/")
+// Go templates
+type Article struct {
+	Author string
+	Title  string
+	Body   string
+}
 
-	handl := mvc.NewMvcHandler()
-	handl.AddRoute("Homepage", "/", mvc.GET, SessionController)
-	handl.AddRoute("Hey", "/Hey/{name}", mvc.GET, GreetingController)
-	http.Handle("/", handl)
-	http.ListenAndServe("localhost:4040", nil)
+func GetTestArticle() *Article {
+	return &Article{
+		Author: "Travis Simon",
+		Title:  "Test Article",
+		Body:   "This is the body of the article. It's just a test. Enjoy!",
+	}
+}
+
+var templates = template.Must(template.ParseFiles("article.html"))
+
+func ArticleController(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult {
+	article := GetTestArticle()
+	return mvc.Template("article.html", article, ctx)
+}
+
+func main() {
+	fmt.Println("Listening on: http://localhost:8080/")
+
+	handler := mvc.NewMvcHandler()
+
+	// Set go html-templates
+	handler.SetTemplates(templates)
+	handler.AddRoute("Article", "/Article", mvc.GET, ArticleController)
+
+	// Add routes
+	handler.AddRoute("Homepage", "/", mvc.GET, SessionController)
+	handler.AddRoute("Hey", "/Hey/{name}", mvc.GET, GreetingController)
+	handler.AddRoute("Article", "/Article", mvc.GET, ArticleController)
+	http.Handle("/", handler)
+	http.ListenAndServe("localhost:8080", nil)
 }
