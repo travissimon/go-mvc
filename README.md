@@ -42,7 +42,7 @@ controller converts a URL part (specified in a route: see below) to uppercase:
 
     func ToUpperController(ctx *mvc.WebContext, params url.Values) mvc.ControllerResults {
 	    in := params.Get("input")
-		upper := NewViewWriter(strings.ToUpper(in))
+		upper := strings.ToUpper(in)
 		hamlWriter := NewViewWriter(upper)
 		return mvc.Haml(hamlWriter, upper, ctx)
     }
@@ -50,8 +50,7 @@ controller converts a URL part (specified in a route: see below) to uppercase:
 The code above could be tested like this:
 
     func ToUpperController_Test(t *testing.T) {
-	    ctx = NewWebContext(nil, nil, nil)
-		params := url.Values{}
+	    ctx, params = GetTestControllerParameters()
 		params.Add("input", "tesTIng")
 
 		result := ToUpperController(ctx, params)
