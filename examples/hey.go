@@ -4,6 +4,7 @@ package main
 // EDIT THE .haml FILE INSTEAD
 
 import (
+	"fmt"
 	"github.com/travissimon/formatting"
 	"net/http"
 )
@@ -20,23 +21,12 @@ type HeyWriter struct {
 	data string
 }
 
-func (wr HeyWriter) Execute(w http.ResponseWriter, r *http.Request) {
-	wr.ExecuteData(w, r, wr.data)
-}
-
-func (wr *HeyWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data string) {
-	html := formatting.NewIndentingWriter(w)
-
-	html.Print(
+var HeyHtml = [...]string{
 `<html>
 	<head>
 		<title>
-			`)
-
-	html.Print("Hey, ", data)
-
-	html.Print(
-`
+			`,
+			`
 		</title>
 	</head>
 	<body>
@@ -48,12 +38,8 @@ func (wr *HeyWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data st
 		</style>
 		<div id="content">
 			<h1>
-				`)
-
-	html.Print("Hey, ", data)
-
-	html.Print(
-`
+				`,
+				`
 			</h1>
 			<p>
 				 This page demostrates the use of parameterised routes. The controller for this page defines this route
@@ -74,5 +60,16 @@ func (wr *HeyWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data st
 		</div>
 	</body>
 </html>
-`)
+`,
+}
+
+func (wr HeyWriter) Execute(w http.ResponseWriter, r *http.Request) {
+	wr.ExecuteData(w, r, wr.data)
+}
+
+func (wr *HeyWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data string) {
+	fmt.Fprint(w, HeyArray[0])
+	fmt.Fprint(w, "Hey, ", data)
+	fmt.Fprint(w, HeyArray[1])
+	fmt.Fprint(w, "Hey, ", data)
 }

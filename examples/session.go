@@ -4,6 +4,7 @@ package main
 // EDIT THE .haml FILE INSTEAD
 
 import (
+	"fmt"
 	"github.com/travissimon/formatting"
 	"net/http"
 )
@@ -20,14 +21,7 @@ type SessionWriter struct {
 	data int
 }
 
-func (wr SessionWriter) Execute(w http.ResponseWriter, r *http.Request) {
-	wr.ExecuteData(w, r, wr.data)
-}
-
-func (wr *SessionWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data int) {
-	html := formatting.NewIndentingWriter(w)
-
-	html.Print(
+var SessionHtml = [...]string{
 `<html>
 	<head>
 		<title>MVC Example</title>
@@ -41,37 +35,40 @@ func (wr *SessionWriter) ExecuteData(w http.ResponseWriter, r *http.Request, dat
 		</style>
 		<div id="content">
 			<h1>
-				`)
-
-	html.Print("You have visited this page ", data, " times")
-
-	html.Print(
-`
+				`,
+				`
 			</h1>
 			<div> <a href="/">Click here</a> to reload this page to see the magic of sessions.</div>
 			<div> Go MVC also provides easy-to-use <a href="/Hey/Mvc User">parameterised routes</a>.</div>
 			<div> You can also use <a href="/Article">go templates</a></div>
 			<p>Dynamic processing:</p>
 			<ol>
-				`)
-
-	for i := 0; i < 10; i++ {
-	html.Print(
-`<li>
-					`)
-
-	html.Print("Item: ", (i + 1))
-
-	html.Print(
-`
+				`,
+				`
+				<li>
+					`,
+					`
 				</li>
-				`)
-
-	}
-	html.Print(
-`</ol>
+				`,
+				`
+			</ol>
 		</div>
 	</body>
 </html>
-`)
+`,
+}
+
+func (wr SessionWriter) Execute(w http.ResponseWriter, r *http.Request) {
+	wr.ExecuteData(w, r, wr.data)
+}
+
+func (wr *SessionWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data int) {
+	fmt.Fprint(w, SessionArray[0])
+	fmt.Fprint(w, "You have visited this page ", data, " times")
+	fmt.Frint(w, SessionArray[1])
+	for i := 0; i < 10; i++ {
+		fmt.Fprint(w, SessionArray[2])
+		fmt.Fprint(w, "Item: ", (i + 1))
+		fmt.Frint(w, SessionArray[3])
+	}
 }
