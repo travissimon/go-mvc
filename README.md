@@ -4,6 +4,8 @@ Go-MVC - Testable MVC Framework for Go
 Go-MVC is a lightweight MVC framework for the Go language. Its goals are
 to provide an efficient, testable framework for creating web applications.
 
+[![Build Status](https://travis-ci.org/travissimon/go-mvc.png)](https://travis-ci.org/travissimon/go-mvc)
+
 Go-MVC's main features are:
 * Routing with Named Parameters
 * Testable controllers

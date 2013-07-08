@@ -3,8 +3,6 @@ Package MVC provides a lightweight, testable and efficient Model-View-Controller
 The main features are testable controllers, session support, parameterised routes
 and support for a Haml-like template language.
 
-[![Build Status](https://travis-ci.org/travissimon/go-mvc.png)](https://travis-ci.org/travissimon/go-mvc)
-
 The main component is the mvc handler, instantiated like this:
 
     handler := mvc.NewMvcHandler()
