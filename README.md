@@ -8,6 +8,7 @@ Go-MVC's main features are:
 * Routing with Named Parameters
 * Testable controllers
 * Session support
+* Support for different templating engines and Json requests
 
 Development is still underway, so contributions are encouraged.
 
