@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/travissimon/go-mvc"
 	"log"
-	"net/url"
 	"testing"
 )
 
@@ -12,7 +11,7 @@ func Test_WebserverHookup(t *testing.T) {
 }
 
 func SessionController_Test(t *testing.T) {
-	ctx, params := mvc.GetTestControllerParameters()
+	ctx, _ := mvc.GetTestControllerParameters()
 	res := SessionController(ctx, nil)
 
 	// check that 'count' has been set in the session
