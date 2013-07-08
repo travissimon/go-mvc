@@ -33,5 +33,7 @@ Haml template to render to the user. Note that the function returns a
 mvc.ControllerResult object, which allows us to call this controller method
 in a test scenario and test the resulting ControllerResult.
 
+[![Build Status](https://travis-ci.org/travissimon/go-mvc.png)](https://travis-ci.org/travissimon/go-mvc)
+
 */
 package mvc
