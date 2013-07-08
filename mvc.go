@@ -1,13 +1,14 @@
 package mvc
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
 	"net/url"
 )
 
-// This needs to be moved
+// WebContext provides access to request and session information
 type WebContext struct {
 	mvcHandler     *MvcHandler
 	ResponseWriter http.ResponseWriter
@@ -15,12 +16,14 @@ type WebContext struct {
 	Session        *Session
 }
 
+// Returns empty WebContext and Values objects for testing
 func GetTestControllerParameters() (ctx *WebContext, params url.Values) {
 	ctx = NewWebContext(nil, nil, nil, NewSession("Test Session"))
 	params = url.Values{}
 	return
 }
 
+// Creates a new Web Context
 func NewWebContext(m *MvcHandler, w http.ResponseWriter, r *http.Request, s *Session) *WebContext {
 	return &WebContext{
 		mvcHandler:     m,
@@ -41,6 +44,8 @@ const (
 	DELETE
 )
 
+// NewMvcHandler creates an http handler for the MVC package. You can use this handler
+// to route requests from Go's http server like this: http.Handle("/", handler)
 func NewMvcHandler() *MvcHandler {
 	return &MvcHandler{
 		Routes:          NewRouteHandler(),
@@ -51,12 +56,12 @@ func NewMvcHandler() *MvcHandler {
 	}
 }
 
-// TODO: Fill this out
+// TODO: Fill out this method
 func NotFoundFunc(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "404 Not Found")
 }
 
-// Http handler function to enable MVC functionality
+// MvcHandler provides routing, sessions and an mvc patter for the http.Handle() function
 type MvcHandler struct {
 	Routes          *RouteHandler
 	Sessions        *SessionManager
@@ -70,7 +75,7 @@ func (mvc *MvcHandler) AddRoute(name string, path string, method HttpMethod, con
 	mvc.Routes.AddNewRoute(name, path, method, controllerFunc)
 }
 
-// Adds all Templates to the MVC Hanlder.
+// Adds all (parsed) go Templates to the MVC Hanlder.
 // Template value should be the result of calling 'template.ParseFiles(...)'
 func (mvc *MvcHandler) SetTemplates(template *template.Template) {
 	mvc.Templates = template
@@ -90,7 +95,7 @@ func (mvc *MvcHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// add parameters from form posts
 	// Do we need to call parse form?
-	MergeValues(params, r.Form)
+	mergeValues(params, r.Form)
 
 	var session *Session
 	if mvc.SessionsEnabled {
@@ -104,7 +109,8 @@ func (mvc *MvcHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	result.Execute()
 }
 
-func MergeValues(vals, valsToMerge url.Values) {
+// mergeValues combines url.Values into the the first argument
+func mergeValues(vals, valsToMerge url.Values) {
 	for key, valSlice := range valsToMerge {
 		for _, item := range valSlice {
 			vals.Add(key, item)
@@ -112,20 +118,20 @@ func MergeValues(vals, valsToMerge url.Values) {
 	}
 }
 
-// Return value from a controller
+// ControllerResult is the return interface value from a controller.
 type ControllerResult interface {
 	Execute()
 }
 
-// Method signature expected for a controller function
+// ControllerFunc is the signature expected for a controller function
 type ControllerFunc func(ctx *WebContext, params url.Values) ControllerResult
 
-// Haml definition of a controller result
+// HamlTemplate is the interface definition for executing a generated Haml template
 type HamlTemplate interface {
 	Execute(http.ResponseWriter, *http.Request)
 }
 
-// Haml Result, containing the template, data to display and
+// HamlResult contains the template, data to display and
 // the web context within which we are working
 type HamlResult struct {
 	Template HamlTemplate
@@ -133,14 +139,14 @@ type HamlResult struct {
 	Context  *WebContext
 }
 
-// ControllerResult Execute() method for a Haml template
+// Execute() executes the Haml template and writes the response to the ResponseWriter
 func (h *HamlResult) Execute() {
 	tmpl := h.Template
 	ctx := *h.Context
 	tmpl.Execute(ctx.ResponseWriter, h.Context.Request)
 }
 
-// Utility method to build a Controller Result for a Haml template
+// Haml is a utility method to create a controller result for executing Haml templates
 func Haml(templ HamlTemplate, data interface{}, ctx *WebContext) ControllerResult {
 	return &HamlResult{
 		Template: templ,
@@ -149,14 +155,14 @@ func Haml(templ HamlTemplate, data interface{}, ctx *WebContext) ControllerResul
 	}
 }
 
-// Template result for combining go Templates with a data itme
+// TemplateResult combines a Go Template and the data for its execution context
 type TemplateResult struct {
 	TemplateName string
 	Data         interface{}
 	Context      *WebContext
 }
 
-// ControllerResult Execute() method for a Haml template
+// Execute executes the template and writes the result to the Http response
 func (t *TemplateResult) Execute() {
 	templateName := t.TemplateName
 	ctx := *t.Context
@@ -168,10 +174,38 @@ func (t *TemplateResult) Execute() {
 	}
 }
 
+// Template is a utility method to create a controller result for executing go templates
 func Template(templateName string, data interface{}, ctx *WebContext) ControllerResult {
 	return &TemplateResult{
 		TemplateName: templateName,
 		Data:         data,
 		Context:      ctx,
+	}
+}
+
+// JsonResult is a ControllerResult for returning Json to the client
+type JsonResult struct {
+	Data    interface{}
+	Context *WebContext
+}
+
+// Execute marshalls the Json object and returns the result to the client
+func (j *JsonResult) Execute() {
+	respWriter := j.Context.ResponseWriter
+	respWriter.Header().Set("Content-Type", "application/json")
+	json, err := json.Marshal(j.Data)
+	if err != nil {
+		fmt.Fprintf(respWriter, fmt.Sprintf("{Error: '%s'}", err.Error()))
+		return
+	}
+	jsonStr := string(json)
+	fmt.Fprintf(j.Context.ResponseWriter, jsonStr)
+}
+
+// Json is a utility function for creating ControllerResults to return Json to the client
+func Json(data interface{}, ctx *WebContext) ControllerResult {
+	return &JsonResult{
+		Data:    data,
+		Context: ctx,
 	}
 }

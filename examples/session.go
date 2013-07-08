@@ -5,7 +5,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/travissimon/formatting"
 	"net/http"
 )
 
@@ -63,12 +62,12 @@ func (wr SessionWriter) Execute(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wr *SessionWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data int) {
-	fmt.Fprint(w, SessionArray[0])
+	fmt.Fprint(w, SessionHtml[0])
 	fmt.Fprint(w, "You have visited this page ", data, " times")
-	fmt.Frint(w, SessionArray[1])
+	fmt.Fprint(w, SessionHtml[1])
 	for i := 0; i < 10; i++ {
-		fmt.Fprint(w, SessionArray[2])
+		fmt.Fprint(w, SessionHtml[2])
 		fmt.Fprint(w, "Item: ", (i + 1))
-		fmt.Frint(w, SessionArray[3])
+		fmt.Fprint(w, SessionHtml[3])
 	}
 }

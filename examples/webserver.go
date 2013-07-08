@@ -55,6 +55,11 @@ func ArticleController(ctx *mvc.WebContext, params url.Values) mvc.ControllerRes
 	return mvc.Template("article.html", article, ctx)
 }
 
+func JsonController(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult {
+	article := GetTestArticle()
+	return mvc.Json(article, ctx)
+}
+
 func main() {
 	fmt.Println("Listening on: http://localhost:8080/")
 
@@ -68,6 +73,8 @@ func main() {
 	handler.AddRoute("Homepage", "/", mvc.GET, SessionController)
 	handler.AddRoute("Hey", "/Hey/{name}", mvc.GET, GreetingController)
 	handler.AddRoute("Article", "/Article", mvc.GET, ArticleController)
+	handler.AddRoute("Json", "/json", mvc.GET, JsonController)
+
 	http.Handle("/", handler)
 	http.ListenAndServe("localhost:8080", nil)
 }

@@ -5,7 +5,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/travissimon/formatting"
 	"net/http"
 )
 
@@ -68,8 +67,8 @@ func (wr HeyWriter) Execute(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wr *HeyWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data string) {
-	fmt.Fprint(w, HeyArray[0])
+	fmt.Fprint(w, HeyHtml[0])
 	fmt.Fprint(w, "Hey, ", data)
-	fmt.Fprint(w, HeyArray[1])
+	fmt.Fprint(w, HeyHtml[1])
 	fmt.Fprint(w, "Hey, ", data)
 }
