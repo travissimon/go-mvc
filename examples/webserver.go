@@ -19,7 +19,7 @@ func SessionController(ctx *mvc.WebContext, params url.Values) mvc.ControllerRes
 	count++
 	ctx.Session.Put("count", count)
 
-	wr := NewSessionWriter(count)
+	wr := NewSessionWriter()
 	return mvc.Haml(wr, count, ctx)
 }
 
@@ -29,7 +29,7 @@ func GreetingController(ctx *mvc.WebContext, params url.Values) mvc.ControllerRe
 		name = "there"
 	}
 
-	wr := NewHeyWriter(name)
+	wr := NewHeyWriter()
 	return mvc.Haml(wr, name, ctx)
 }
 

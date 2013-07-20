@@ -128,6 +128,7 @@ type ControllerFunc func(ctx *WebContext, params url.Values) ControllerResult
 
 // HamlTemplate is the interface definition for executing a generated Haml template
 type HamlTemplate interface {
+	SetData(data interface{})
 	Execute(http.ResponseWriter, *http.Request)
 }
 
@@ -142,6 +143,7 @@ type HamlResult struct {
 // Execute() executes the Haml template and writes the response to the ResponseWriter
 func (h *HamlResult) Execute() {
 	tmpl := h.Template
+	tmpl.SetData(h.Data)
 	ctx := *h.Context
 	tmpl.Execute(ctx.ResponseWriter, h.Context.Request)
 }

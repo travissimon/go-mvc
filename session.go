@@ -102,6 +102,8 @@ func (sm *SessionManager) getSessionId(w http.ResponseWriter, r *http.Request) s
 	id := StrongRandomString()
 
 	c := &http.Cookie{Name: SESSION_IDENT, Value: id, Path: "/"}
+	c.HttpOnly = true
+	c.Secure = true
 	http.SetCookie(w, c)
 
 	return id

@@ -5,19 +5,30 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 )
 
-func NewHeyWriter(data string) (*HeyWriter) {
-	wr := &HeyWriter {
-		data: data,
-	}
+func NewHeyWriter() (*HeyWriter) {
+	wr := &HeyWriter{}
 	
+	for idx, pattern := range HeyTemplatePatterns {
+		tmpl, err := template.New("HeyTemplates" + string(idx)).Parse(pattern)
+		if err != nil {
+			fmt.Errorf("Could not parse template: %d", idx)
+			panic(err)
+		}
+		HeyTemplates = append(HeyTemplates, tmpl)
+	}
 	return wr
 }
 
 type HeyWriter struct {
 	data string
+}
+
+func (wr *HeyWriter) SetData(data interface{}) {
+	wr.data = data.(string)
 }
 
 var HeyHtml = [...]string{
@@ -62,13 +73,27 @@ var HeyHtml = [...]string{
 `,
 }
 
+var HeyTemplatePatterns = []string{
+	`Hey, {{.}}`,
+	`Hey, {{.}}`,
+}
+
+var HeyTemplates = make([]*template.Template, 0, len(HeyTemplatePatterns))
+
 func (wr HeyWriter) Execute(w http.ResponseWriter, r *http.Request) {
 	wr.ExecuteData(w, r, wr.data)
 }
 
 func (wr *HeyWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data string) {
+	var err error = nil
 	fmt.Fprint(w, HeyHtml[0])
-	fmt.Fprint(w, "Hey, ", data)
+	err = HeyTemplates[0].Execute(w, data)
+	handleHeyError(err)
 	fmt.Fprint(w, HeyHtml[1])
-	fmt.Fprint(w, "Hey, ", data)
+	err = HeyTemplates[1].Execute(w, data)
+	handleHeyError(err)
+	fmt.Fprint(w, HeyHtml[2])
 }
+
+func handleHeyError(err error) {
+	if err != nil {fmt.Println(err)}}

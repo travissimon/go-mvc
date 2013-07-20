@@ -5,19 +5,30 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 )
 
-func NewSessionWriter(data int) (*SessionWriter) {
-	wr := &SessionWriter {
-		data: data,
-	}
+func NewSessionWriter() (*SessionWriter) {
+	wr := &SessionWriter{}
 	
+	for idx, pattern := range SessionTemplatePatterns {
+		tmpl, err := template.New("SessionTemplates" + string(idx)).Parse(pattern)
+		if err != nil {
+			fmt.Errorf("Could not parse template: %d", idx)
+			panic(err)
+		}
+		SessionTemplates = append(SessionTemplates, tmpl)
+	}
 	return wr
 }
 
 type SessionWriter struct {
 	data int
+}
+
+func (wr *SessionWriter) SetData(data interface{}) {
+	wr.data = data.(int)
 }
 
 var SessionHtml = [...]string{
@@ -48,8 +59,6 @@ var SessionHtml = [...]string{
 					`,
 					`
 				</li>
-				`,
-				`
 			</ol>
 		</div>
 	</body>
@@ -57,17 +66,30 @@ var SessionHtml = [...]string{
 `,
 }
 
+var SessionTemplatePatterns = []string{
+	`You have visited this page {{.}} times`,
+	`Item: {{.}}`,
+}
+
+var SessionTemplates = make([]*template.Template, 0, len(SessionTemplatePatterns))
+
 func (wr SessionWriter) Execute(w http.ResponseWriter, r *http.Request) {
 	wr.ExecuteData(w, r, wr.data)
 }
 
 func (wr *SessionWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data int) {
+	var err error = nil
 	fmt.Fprint(w, SessionHtml[0])
-	fmt.Fprint(w, "You have visited this page ", data, " times")
+	err = SessionTemplates[0].Execute(w, data)
+	handleSessionError(err)
 	fmt.Fprint(w, SessionHtml[1])
 	for i := 0; i < 10; i++ {
 		fmt.Fprint(w, SessionHtml[2])
-		fmt.Fprint(w, "Item: ", (i + 1))
-		fmt.Fprint(w, SessionHtml[3])
+		err = SessionTemplates[1].Execute(w, data)
+		handleSessionError(err)
 	}
+	fmt.Fprint(w, SessionHtml[3])
 }
+
+func handleSessionError(err error) {
+	if err != nil {fmt.Println(err)}}
