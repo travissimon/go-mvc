@@ -94,7 +94,7 @@ func (mvc *MvcHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	params, _ := route.GetParameterValues(r.URL.Path)
 
 	// add parameters from form posts
-	// Do we need to call parse form?
+	r.ParseForm()
 	mergeValues(params, r.Form)
 
 	var session *Session

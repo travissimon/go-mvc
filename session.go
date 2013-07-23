@@ -13,7 +13,7 @@ var SESSION_IDENT = "gomvc_sessionid"
 
 // Stores session information for an individual user
 type Session struct {
-	id          string
+	Id          string
 	values      map[string]interface{}
 	lastVisited time.Time
 }
@@ -112,7 +112,7 @@ func (sm *SessionManager) getSessionId(w http.ResponseWriter, r *http.Request) s
 // Creates a new session for the given id
 func NewSession(sessionId string) *Session {
 	session := new(Session)
-	session.id = sessionId
+	session.Id = sessionId
 	session.values = make(map[string]interface{})
 
 	return session

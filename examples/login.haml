@@ -1,0 +1,77 @@
+@import(
+)
+
+@data_type: *LoginResult
+
+%html
+  %head
+    %title Login example
+  %body
+    %style
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+        background: #ddd
+      }
+      \#content {
+        width: 80%;
+        background: #fff;
+        border-color: #333;
+        margin: 20px;
+        padding: 10px;
+        \-webkit-border-radius: 10px;
+        \-moz-border-radius: 10px;
+        border-radius: 10px;
+      }
+      pre, code {
+          font-family: Menlo, monospace;
+          font-size: 14px;
+      }
+      pre {
+          line-height: 18px;
+      }
+    #content
+
+      %h1 Login
+
+      - if !data.IsLoggedIn {
+
+        %form{method: post}
+          #login
+
+            - if data.LoginSource == Form {
+              .error The username and password you supplied were not correct.
+                Please try again.
+            - }
+
+            %p Username
+
+            %input{type: text, name: txtUsername}
+
+            %p Password
+
+            %input{type: password, name: txtPassword}
+
+            %p
+              %button{name: submit, type: submit, value: Submit}
+                Submit
+
+          #new_login
+            %p Username
+
+            %input{type: text, name: txtNewUsername}
+
+            %p Password
+
+            %input{type: password, name: txtNewPassword}
+
+            %p Recovery Email Address
+
+            %input{type: text, name: txtNewEmailAddress}
+
+            %p
+              %button{name: submit, type: submit, value: New}
+                Submit
+
+      - } else {
+        %div= "Hey, you're logged in, ", data.User.Username
+      - }

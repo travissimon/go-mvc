@@ -10,7 +10,7 @@ import (
 
 type User struct {
 	Id                   int
-	Username             int
+	Username             string
 	Password             string
 	RecoveryEmailAddress string
 }
@@ -27,6 +27,7 @@ type AuthenticationDatabase struct {
 	insertAuthentication         *sql.Stmt
 	getUserById                  *sql.Stmt
 	getUserByUsername            *sql.Stmt
+	getUserByUsernameAndPassword *sql.Stmt
 	getAuthenticationBySessionId *sql.Stmt
 }
 
@@ -57,6 +58,10 @@ func NewAuthenticationDatabase() *AuthenticationDatabase {
 	usrByUsername, err := db.Prepare(getUserByUsernameSQL)
 	auth.panicOnError(err)
 	auth.getUserByUsername = usrByUsername
+
+	authBySession, err := db.Prepare(getAuthenticationBySessionId)
+	auth.panicOnError(err)
+	auth.getAuthenticationBySessionId = authBySession
 
 	return auth
 }
@@ -112,6 +117,24 @@ func (auth *AuthenticationDatabase) GetUserById(id int) (u *User, err error) {
 
 func (auth *AuthenticationDatabase) GetUserByUsername(username string) (user *User, err error) {
 	res := auth.getUserByUsername.QueryRow(username)
+
+	usr := new(User)
+	err = res.Scan(
+		&usr.Id,
+		&usr.Username,
+		&usr.Password,
+		&usr.RecoveryEmailAddress,
+	)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return usr, nil
+}
+
+func (auth *AuthenticationDatabase) GetUserByUsernameAndPassword(username, password string) (user *User, err error) {
+	res := auth.getUserByUsername.QueryRow(username, password)
 
 	usr := new(User)
 	err = res.Scan(
@@ -189,6 +212,13 @@ var getUserByUsernameSQL string = `
 SELECT Id, Username, Password, RecoveryEmailAddress
 FROM gomvc.User
 WHERE Username = ?
+;`
+
+var getUserByUsernameAndPasswordSQL string = `
+SELECT Id, Username, Password, RecoveryEmailAddress
+FROM gomvc.User
+WHERE Username = ?
+AND Password = ?
 ;`
 
 var getAuthenticationBySessionId string = `
