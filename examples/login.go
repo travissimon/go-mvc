@@ -54,10 +54,14 @@ var LoginHtml = [...]string{
 					<div class="error">The username and password you supplied were not correct. Please try again.</div>
 					`,
 					`
-					<p>Username</p>
+					Username
+					<br />
 					<input type="text" name="txtUsername"></input>
-					<p>Password</p>
+					<br />
+					Password
+					<br />
 					<input type="password" name="txtPassword"></input>
+					<br />
 					<p>
 						<button name="submit" type="submit" value="Submit"> Submit</button>
 					</p>
