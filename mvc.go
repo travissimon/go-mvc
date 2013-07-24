@@ -3,9 +3,11 @@ package mvc
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/travissimon/cache"
 	"html/template"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // WebContext provides access to request and session information
@@ -14,22 +16,28 @@ type WebContext struct {
 	ResponseWriter http.ResponseWriter
 	Request        *http.Request
 	Session        *Session
+	User           *User
+}
+
+func (ctx *WebContext) IsUserLoggedIn() bool {
+	return ctx.User != nil
 }
 
 // Returns empty WebContext and Values objects for testing
 func GetTestControllerParameters() (ctx *WebContext, params url.Values) {
-	ctx = NewWebContext(nil, nil, nil, NewSession("Test Session"))
+	ctx = NewWebContext(nil, nil, nil, NewSession("Test Session"), nil)
 	params = url.Values{}
 	return
 }
 
 // Creates a new Web Context
-func NewWebContext(m *MvcHandler, w http.ResponseWriter, r *http.Request, s *Session) *WebContext {
+func NewWebContext(m *MvcHandler, w http.ResponseWriter, r *http.Request, s *Session, u *User) *WebContext {
 	return &WebContext{
 		mvcHandler:     m,
 		ResponseWriter: w,
 		Request:        r,
 		Session:        s,
+		User:           u,
 	}
 }
 
@@ -44,18 +52,6 @@ const (
 	DELETE
 )
 
-// NewMvcHandler creates an http handler for the MVC package. You can use this handler
-// to route requests from Go's http server like this: http.Handle("/", handler)
-func NewMvcHandler() *MvcHandler {
-	return &MvcHandler{
-		Routes:          NewRouteHandler(),
-		Sessions:        NewSessionManager(),
-		SessionsEnabled: true,
-		Templates:       nil,
-		NotFoundHandler: NotFoundFunc,
-	}
-}
-
 // TODO: Fill out this method
 func NotFoundFunc(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "404 Not Found")
@@ -68,6 +64,22 @@ type MvcHandler struct {
 	SessionsEnabled bool
 	Templates       *template.Template // Go Html Templates
 	NotFoundHandler func(http.ResponseWriter, *http.Request)
+	Authenticator   *Authenticator
+	userCache       *cache.LRUCache
+}
+
+// NewMvcHandler creates an http handler for the MVC package. You can use this handler
+// to route requests from Go's http server like this: http.Handle("/", handler)
+func NewMvcHandler() *MvcHandler {
+	return &MvcHandler{
+		Routes:          NewRouteHandler(),
+		Sessions:        NewSessionManager(),
+		SessionsEnabled: true,
+		Templates:       nil,
+		NotFoundHandler: NotFoundFunc,
+		Authenticator:   NewAuthenticator(),
+		userCache:       cache.NewLRUCache(10),
+	}
 }
 
 // Adds a new route to the MVC handler
@@ -102,11 +114,46 @@ func (mvc *MvcHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		session = mvc.Sessions.GetSession(w, r)
 	}
 
-	ctx := NewWebContext(mvc, w, r, session)
+	// check authentication
+	ipAddress := r.RemoteAddr
+	if idx := strings.Index(ipAddress, ":"); idx > 0 {
+		ipAddress = ipAddress[:idx]
+	}
+
+	user, _ := mvc.getAuthenticatedUser(session.Id, ipAddress)
+
+	ctx := NewWebContext(mvc, w, r, session, user)
 
 	result := route.Controller(ctx, params)
 
 	result.Execute()
+}
+
+func (mvc *MvcHandler) getAuthenticatedUser(sessionId, ipAddress string) (user *User, found bool) {
+	cacheKey := sessionId + ipAddress
+	fmt.Printf("Cachekey: %v\n", cacheKey)
+	val, found := mvc.userCache.Get(cacheKey)
+	if found {
+		user = val.(*User)
+		fmt.Printf("Found in cache: %v\n", user)
+	} else {
+		_, user, _ = mvc.Authenticator.GetAuthentication(sessionId, ipAddress)
+		fmt.Printf("Checking auth for user: %v\n", user)
+	}
+
+	found = (user != nil)
+	if found {
+		fmt.Printf("User found, adding to cache")
+		mvc.userCache.Add(cacheKey, user)
+	}
+	return
+}
+func (mvc *MvcHandler) Login(username, password, ipAddress, sessionId string) (error, *User) {
+	return mvc.Authenticator.Login(username, password, ipAddress, sessionId)
+}
+
+func (mvc *MvcHandler) CreateUser(username, password, emailAddress, ipAddress, sessionId string) (err error, user *User) {
+	return mvc.Authenticator.CreateUser(username, password, emailAddress, ipAddress, sessionId)
 }
 
 // mergeValues combines url.Values into the the first argument

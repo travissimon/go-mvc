@@ -8,19 +8,6 @@ import (
 	_ "github.com/ziutek/mymysql/thrsafe"
 )
 
-type User struct {
-	Id                   int
-	Username             string
-	Password             string
-	RecoveryEmailAddress string
-}
-
-type Authentication struct {
-	SessionId string
-	UserId    int
-	IpAddress string
-}
-
 type AuthenticationDatabase struct {
 	db                           *sql.DB
 	insertUser                   *sql.Stmt
@@ -66,7 +53,7 @@ func NewAuthenticationDatabase() *AuthenticationDatabase {
 	return auth
 }
 
-func (auth *AuthenticationDatabase) CreateUser(sessionId, ipAddress, username, emailAddress, encryptedPassword string) (userId int, err error) {
+func (auth *AuthenticationDatabase) CreateUser(username, emailAddress, encryptedPassword, sessionId, ipAddress string) (userId int64, err error) {
 
 	res, err := auth.insertUser.Exec(username, encryptedPassword, emailAddress)
 
@@ -75,12 +62,11 @@ func (auth *AuthenticationDatabase) CreateUser(sessionId, ipAddress, username, e
 		return -1, err
 	}
 
-	id64, err := res.LastInsertId()
+	userId, err = res.LastInsertId()
 	if err != nil {
 		fmt.Println(err)
 		return -1, err
 	}
-	userId = int(id64)
 
 	res, err = auth.insertAuthentication.Exec(sessionId, userId, ipAddress)
 
@@ -92,7 +78,7 @@ func (auth *AuthenticationDatabase) CreateUser(sessionId, ipAddress, username, e
 	return userId, nil
 }
 
-func (auth *AuthenticationDatabase) GetUserById(id int) (u *User, err error) {
+func (auth *AuthenticationDatabase) GetUserById(id int64) (u *User, err error) {
 	res := auth.getUserById.QueryRow(id)
 
 	if err != nil {

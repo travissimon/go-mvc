@@ -61,19 +61,12 @@ func JsonController(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult
 }
 
 func LoginController(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult {
-	sessionId := ctx.Session.Id
-	ipAddress := ctx.Request.RemoteAddr
-	authenticator := mvc.NewAuthenticator()
-	_, user, err := authenticator.GetAuthentication(sessionId, ipAddress)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
 	login := new(LoginResult)
 	login.LoginSource = Session
-	login.User = user
-	login.IsLoggedIn = (user != nil)
+	login.User = ctx.User
+	login.IsLoggedIn = (ctx.IsUserLoggedIn())
+
+	fmt.Printf("Is logged in? %v\n", ctx.IsUserLoggedIn())
 
 	wr := NewLoginWriter()
 	return mvc.Haml(wr, login, ctx)
@@ -106,27 +99,7 @@ func handleExistingLogin(ctx *mvc.WebContext, params url.Values) mvc.ControllerR
 	sessionId := ctx.Session.Id
 	username := params.Get("txtUsername")
 	password := params.Get("txtPassword")
-	authenticator := mvc.NewAuthenticator()
-	_, user := authenticator.Login(username, password, ipAddress, sessionId)
-
-	login := new(LoginResult)
-	login.LoginSource = Form
-	login.User = user
-	login.IsLoggedIn = (user != nil)
-
-	wr := NewLoginWriter()
-	return mvc.Haml(wr, login, ctx)
-}
-
-func handleNewLogin(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult {
-	ipAddress := ctx.Request.RemoteAddr
-	sessionId := ctx.Session.Id
-	username := params.Get("txtNewUsername")
-	password := params.Get("txtNewPassword")
-	email := params.Get("txtNewEmailAddress")
-
-	authenticator := mvc.NewAuthenticator()
-	user, err := authenticator.CreateUser(sessionId, ipAddress, username, password, email)
+	user, err := ctx.mvcHandler.CreateUser(sessionId, ipAddress, username, password, email)
 
 	login := new(LoginResult)
 	login.LoginSource = Form

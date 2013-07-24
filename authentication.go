@@ -5,10 +5,24 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 var UnrecognisedIP error = errors.New("Unrecognised IP Address")
 var UnrecognisedSessionId = errors.New("Unrecognised Session Id")
+
+type User struct {
+	Id                   int64
+	Username             string
+	Password             string
+	RecoveryEmailAddress string
+}
+
+type Authentication struct {
+	SessionId string
+	UserId    int64
+	IpAddress string
+}
 
 type Authenticator struct {
 	db *AuthenticationDatabase
@@ -20,17 +34,18 @@ func NewAuthenticator() *Authenticator {
 	return auth
 }
 
-func (auth *Authenticator) CreateUser(sessionId, ipAddress, username, emailAddress, password string) (user *User, err error) {
+func (auth *Authenticator) CreateUser(username, emailAddress, password string, sessionId, ipAddress string) (err error, user *User) {
 	encrypted, err := encryptPassword(password)
+	ipAddress = removePort(ipAddress)
 
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return err, nil
 	}
 	userId, err := auth.db.CreateUser(sessionId, ipAddress, username, emailAddress, encrypted)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return err, nil
 	}
 	user = new(User)
 	user.Id = userId
@@ -38,12 +53,14 @@ func (auth *Authenticator) CreateUser(sessionId, ipAddress, username, emailAddre
 	user.Password = encrypted
 	user.RecoveryEmailAddress = emailAddress
 
-	return user, nil
+	return nil, user
 }
 
 var ErrInvalidUsernamePassword error = errors.New("Invalid username and password combination")
 
 func (auth *Authenticator) Login(username, password, ipAddress, sessionId string) (error, *User) {
+	ipAddress = removePort(ipAddress)
+
 	user, err := auth.db.GetUserByUsername(username)
 	if err != nil {
 		return ErrInvalidUsernamePassword, nil
@@ -58,6 +75,7 @@ func (auth *Authenticator) Login(username, password, ipAddress, sessionId string
 
 func (auth *Authenticator) GetAuthentication(sessionId, ipAddress string) (authentication *Authentication, user *User, err error) {
 	authentication, user, err = auth.db.GetAuth(sessionId)
+	ipAddress = removePort(ipAddress)
 
 	if err == sql.ErrNoRows {
 		return nil, nil, UnrecognisedSessionId
@@ -84,4 +102,11 @@ func encryptPassword(password string) (string, error) {
 	enc, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	fmt.Printf("encrypt Password, err: %v\n", err)
 	return string(enc), err
+}
+
+func removePort(ipAddress string) string {
+	if idx := strings.Index(ipAddress, ":"); idx > 0 {
+		return ipAddress[:idx]
+	}
+	return ipAddress
 }
