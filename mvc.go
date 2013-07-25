@@ -19,26 +19,62 @@ type WebContext struct {
 	User           *User
 }
 
+func (ctx *WebContext) Login(username, password string) (*User, error) {
+	sessionId, ipAddress := ctx.getSessionIdAndIPAddress()
+	return ctx.mvcHandler.Authenticator.Login(username, password, ipAddress, sessionId)
+}
+
+func (ctx *WebContext) CreateUser(username, password, emailAddress string) (user *User, err error) {
+	sessionId, ipAddress := ctx.getSessionIdAndIPAddress()
+	return ctx.mvcHandler.Authenticator.CreateUser(username, password, emailAddress, ipAddress, sessionId)
+}
+
 func (ctx *WebContext) IsUserLoggedIn() bool {
 	return ctx.User != nil
 }
 
+func (ctx *WebContext) getSessionIdAndIPAddress() (sessionId, ipAddress string) {
+	ipAddress = ctx.Request.RemoteAddr
+	if idx := strings.Index(ipAddress, ":"); idx > 0 {
+		ipAddress = ipAddress[:idx]
+	}
+	sessionId = ctx.Session.Id
+	return
+}
+
 // Returns empty WebContext and Values objects for testing
 func GetTestControllerParameters() (ctx *WebContext, params url.Values) {
-	ctx = NewWebContext(nil, nil, nil, NewSession("Test Session"), nil)
+	ctx = NewWebContext(nil, nil, nil, NewSession("Test Session"))
 	params = url.Values{}
 	return
 }
 
 // Creates a new Web Context
-func NewWebContext(m *MvcHandler, w http.ResponseWriter, r *http.Request, s *Session, u *User) *WebContext {
-	return &WebContext{
+func NewWebContext(m *MvcHandler, w http.ResponseWriter, r *http.Request, s *Session) *WebContext {
+	ctx := &WebContext{
 		mvcHandler:     m,
 		ResponseWriter: w,
 		Request:        r,
 		Session:        s,
-		User:           u,
 	}
+
+	var user *User = nil
+	sessionId, ipAddress := ctx.getSessionIdAndIPAddress()
+	cacheKey := sessionId + ipAddress
+	val, found := m.userCache.Get(cacheKey)
+	if found {
+		user = val.(*User)
+	} else {
+		_, user, _ = m.Authenticator.GetAuthentication(sessionId, ipAddress)
+	}
+
+	found = (user != nil)
+	if found {
+		m.userCache.Add(cacheKey, user)
+		ctx.User = user
+	}
+
+	return ctx
 }
 
 type HttpMethod int
@@ -114,46 +150,11 @@ func (mvc *MvcHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		session = mvc.Sessions.GetSession(w, r)
 	}
 
-	// check authentication
-	ipAddress := r.RemoteAddr
-	if idx := strings.Index(ipAddress, ":"); idx > 0 {
-		ipAddress = ipAddress[:idx]
-	}
-
-	user, _ := mvc.getAuthenticatedUser(session.Id, ipAddress)
-
-	ctx := NewWebContext(mvc, w, r, session, user)
+	ctx := NewWebContext(mvc, w, r, session)
 
 	result := route.Controller(ctx, params)
 
 	result.Execute()
-}
-
-func (mvc *MvcHandler) getAuthenticatedUser(sessionId, ipAddress string) (user *User, found bool) {
-	cacheKey := sessionId + ipAddress
-	fmt.Printf("Cachekey: %v\n", cacheKey)
-	val, found := mvc.userCache.Get(cacheKey)
-	if found {
-		user = val.(*User)
-		fmt.Printf("Found in cache: %v\n", user)
-	} else {
-		_, user, _ = mvc.Authenticator.GetAuthentication(sessionId, ipAddress)
-		fmt.Printf("Checking auth for user: %v\n", user)
-	}
-
-	found = (user != nil)
-	if found {
-		fmt.Printf("User found, adding to cache")
-		mvc.userCache.Add(cacheKey, user)
-	}
-	return
-}
-func (mvc *MvcHandler) Login(username, password, ipAddress, sessionId string) (error, *User) {
-	return mvc.Authenticator.Login(username, password, ipAddress, sessionId)
-}
-
-func (mvc *MvcHandler) CreateUser(username, password, emailAddress, ipAddress, sessionId string) (err error, user *User) {
-	return mvc.Authenticator.CreateUser(username, password, emailAddress, ipAddress, sessionId)
 }
 
 // mergeValues combines url.Values into the the first argument

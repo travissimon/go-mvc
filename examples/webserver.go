@@ -66,8 +66,6 @@ func LoginController(ctx *mvc.WebContext, params url.Values) mvc.ControllerResul
 	login.User = ctx.User
 	login.IsLoggedIn = (ctx.IsUserLoggedIn())
 
-	fmt.Printf("Is logged in? %v\n", ctx.IsUserLoggedIn())
-
 	wr := NewLoginWriter()
 	return mvc.Haml(wr, login, ctx)
 }
@@ -95,11 +93,25 @@ func LoginPostController(ctx *mvc.WebContext, params url.Values) mvc.ControllerR
 }
 
 func handleExistingLogin(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult {
-	ipAddress := ctx.Request.RemoteAddr
-	sessionId := ctx.Session.Id
 	username := params.Get("txtUsername")
 	password := params.Get("txtPassword")
-	user, err := ctx.mvcHandler.CreateUser(sessionId, ipAddress, username, password, email)
+	user, err := ctx.Login(username, password)
+
+	login := new(LoginResult)
+	login.LoginSource = Form
+	login.User = user
+	login.IsLoggedIn = err == nil
+
+	wr := NewLoginWriter()
+	return mvc.Haml(wr, login, ctx)
+}
+
+func handleNewLogin(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult {
+	username := params.Get("txtNewUsername")
+	password := params.Get("txtNewPassword")
+	email := params.Get("txtNewEmailAddress")
+
+	user, err := ctx.CreateUser(username, password, email)
 
 	login := new(LoginResult)
 	login.LoginSource = Form
@@ -111,11 +123,6 @@ func handleExistingLogin(ctx *mvc.WebContext, params url.Values) mvc.ControllerR
 }
 
 func main() {
-
-	// insert a user into database
-	//auth_db := mvc.NewAuthenticationDatabase()
-	//userId, err := auth_db.CreateUser("1", "1.1", "tsimon", "tsimon@gmail.com", "Secret!")
-
 	fmt.Println("Listening on: http://localhost:8080/")
 
 	handler := mvc.NewMvcHandler()
