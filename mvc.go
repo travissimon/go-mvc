@@ -190,10 +190,11 @@ type HamlResult struct {
 
 // Execute() executes the Haml template and writes the response to the ResponseWriter
 func (h *HamlResult) Execute() {
+	respWriter := h.Context.ResponseWriter
+	respWriter.Header().Set("Content-Type", "text/html")
 	tmpl := h.Template
 	tmpl.SetData(h.Data)
-	ctx := *h.Context
-	tmpl.Execute(ctx.ResponseWriter, h.Context.Request)
+	tmpl.Execute(respWriter, h.Context.Request)
 }
 
 // Haml is a utility method to create a controller result for executing Haml templates
@@ -214,11 +215,13 @@ type TemplateResult struct {
 
 // Execute executes the template and writes the result to the Http response
 func (t *TemplateResult) Execute() {
+	respWriter := t.Context.ResponseWriter
+	respWriter.Header().Set("Content-Type", "text/html")
 	templateName := t.TemplateName
 	ctx := *t.Context
 	templates := *ctx.mvcHandler.Templates
 
-	err := templates.ExecuteTemplate(ctx.ResponseWriter, templateName, t.Data)
+	err := templates.ExecuteTemplate(respWriter, templateName, t.Data)
 	if err != nil {
 		http.Error(ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 	}
