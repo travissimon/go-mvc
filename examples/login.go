@@ -115,7 +115,7 @@ func (wr *LoginWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data 
 		handleLoginError(err)
 	}
 	fmt.Fprint(w, LoginHtml[5])
-}
+if err != nil {err = nil}}
 
 func handleLoginError(err error) {
 	if err != nil {fmt.Println(err)}}

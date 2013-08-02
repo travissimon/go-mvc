@@ -51,6 +51,7 @@ var SessionHtml = [...]string{
 			<div> <a href="/">Click here</a> to reload this page to see the magic of sessions.</div>
 			<div> Go MVC also provides easy-to-use <a href="/Hey/Mvc User">parameterised routes</a>.</div>
 			<div> You can also use <a href="/Article">go templates</a></div>
+			<div> <a href="/redirect">Redirect</a> support as well</div>
 			<p>Dynamic processing:</p>
 			<ol>
 				`,
@@ -89,7 +90,7 @@ func (wr *SessionWriter) ExecuteData(w http.ResponseWriter, r *http.Request, dat
 		handleSessionError(err)
 	}
 	fmt.Fprint(w, SessionHtml[3])
-}
+if err != nil {err = nil}}
 
 func handleSessionError(err error) {
 	if err != nil {fmt.Println(err)}}

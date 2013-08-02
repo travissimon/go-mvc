@@ -70,6 +70,11 @@ func LoginController(ctx *mvc.WebContext, params url.Values) mvc.ControllerResul
 	return mvc.Haml(wr, login, ctx)
 }
 
+func RedirectController(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult {
+	redirectUrl := "/Article"
+	return mvc.Redirect(redirectUrl, ctx)
+}
+
 type LoginSource int
 
 const (
@@ -138,6 +143,7 @@ func main() {
 	handler.AddRoute("Json", "/json", mvc.GET, JsonController)
 	handler.AddRoute("Login", "/login", mvc.GET, LoginController)
 	handler.AddRoute("Login Post", "/login", mvc.POST, LoginPostController)
+	handler.AddRoute("Redirect", "/redirect", mvc.GET, RedirectController)
 
 	http.Handle("/", handler)
 	http.ListenAndServe("localhost:8080", nil)

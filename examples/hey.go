@@ -64,8 +64,8 @@ var HeyHtml = [...]string{
 						<li><a href="/Hey/World">/Hey/World</a></li>
 						<li><a href="/Hey/">/Hey</a> (default value set in controller)</li>
 					</ul>
+					<p> Return <a href="/">home</a></p>
 				</p>
-				<p> Return <a href="/">home</a></p>
 			</p>
 		</div>
 	</body>
@@ -93,7 +93,7 @@ func (wr *HeyWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data st
 	err = HeyTemplates[1].Execute(w, data)
 	handleHeyError(err)
 	fmt.Fprint(w, HeyHtml[2])
-}
+if err != nil {err = nil}}
 
 func handleHeyError(err error) {
 	if err != nil {fmt.Println(err)}}
