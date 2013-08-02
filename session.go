@@ -103,7 +103,8 @@ func (sm *SessionManager) getSessionId(w http.ResponseWriter, r *http.Request) s
 
 	c := &http.Cookie{Name: SESSION_IDENT, Value: id, Path: "/"}
 	c.HttpOnly = true
-	c.Secure = true
+	// TODO: Enable when running behind SSL
+	// c.Secure = true
 	http.SetCookie(w, c)
 
 	return id
