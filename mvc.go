@@ -42,14 +42,14 @@ func (ctx *WebContext) getSessionIdAndIPAddress() (sessionId, ipAddress string) 
 	return
 }
 
-// Returns empty WebContext and Values objects for testing
+// GetTestControllerParameters returns empty WebContext and Values objects for testing
 func GetTestControllerParameters() (ctx *WebContext, params url.Values) {
 	ctx = NewWebContext(nil, nil, nil, NewSession("Test Session"))
 	params = url.Values{}
 	return
 }
 
-// Creates a new Web Context
+// NewWebContext creates a new Web Context
 func NewWebContext(m *MvcHandler, w http.ResponseWriter, r *http.Request, s *Session) *WebContext {
 	ctx := &WebContext{
 		mvcHandler:     m,
@@ -173,6 +173,23 @@ type ControllerResult interface {
 
 // ControllerFunc is the signature expected for a controller function
 type ControllerFunc func(ctx *WebContext, params url.Values) ControllerResult
+
+// Redirects
+type RedirectResult struct {
+	Context *WebContext
+	url     string
+}
+
+func (r *RedirectResult) Execute() {
+	http.Redirect(r.Context.ResponseWriter, r.Context.Request, r.url, http.StatusFound)
+}
+
+func Redirect(url string, ctx *WebContext) ControllerResult {
+	return &RedirectResult{
+		Context: ctx,
+		url:     url,
+	}
+}
 
 // HamlTemplate is the interface definition for executing a generated Haml template
 type HamlTemplate interface {
