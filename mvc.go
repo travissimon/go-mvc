@@ -24,6 +24,11 @@ func (ctx *WebContext) Login(username, password string) (*User, error) {
 	return ctx.mvcHandler.Authenticator.Login(username, password, ipAddress, sessionId)
 }
 
+func (ctx *WebContext) Logout() {
+	sessionId := ctx.Session.Id
+	ctx.mvcHandler.Authenticator.Logout(sessionId)
+}
+
 func (ctx *WebContext) CreateUser(username, password, emailAddress string) (user *User, err error) {
 	sessionId, ipAddress := ctx.getSessionIdAndIPAddress()
 	return ctx.mvcHandler.Authenticator.CreateUser(username, password, emailAddress, ipAddress, sessionId)
@@ -188,6 +193,23 @@ func Redirect(url string, ctx *WebContext) ControllerResult {
 	return &RedirectResult{
 		Context: ctx,
 		url:     url,
+	}
+}
+
+// Errors
+type ErrorResult struct {
+	Context *WebContext
+	Message string
+}
+
+func (e *ErrorResult) Execute() {
+	http.Error(e.Context.ResponseWriter, e.Message, http.StatusInternalServerError)
+}
+
+func Error(errorMessage string, ctx *WebContext) ControllerResult {
+	return &ErrorResult{
+		Context: ctx,
+		Message: errorMessage,
 	}
 }
 

@@ -84,6 +84,9 @@ var LoginHtml = [...]string{
 				`,
 				`
 			</div>
+			<p><a href="/logout">Logout</a></p>
+			`,
+			`
 		</div>
 	</body>
 </html>
@@ -113,8 +116,9 @@ func (wr *LoginWriter) ExecuteData(w http.ResponseWriter, r *http.Request, data 
 		fmt.Fprint(w, LoginHtml[4])
 		err = LoginTemplates[0].Execute(w, data)
 		handleLoginError(err)
+		fmt.Fprint(w, LoginHtml[5])
 	}
-	fmt.Fprint(w, LoginHtml[5])
+	fmt.Fprint(w, LoginHtml[6])
 if err != nil {err = nil}}
 
 func handleLoginError(err error) {

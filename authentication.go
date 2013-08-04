@@ -66,7 +66,17 @@ func (auth *Authenticator) Login(username, password, ipAddress, sessionId string
 	if !match {
 		return nil, ErrInvalidUsernamePassword
 	}
+
+	_, _, authErr := auth.GetAuthentication(sessionId, ipAddress)
+	if authErr != nil {
+		err = auth.InsertAuthentication(sessionId, user.Id, ipAddress)
+	}
+
 	return user, nil
+}
+
+func (auth *Authenticator) Logout(sessionId string) {
+	auth.db.DeleteAuth(sessionId)
 }
 
 func (auth *Authenticator) GetAuthentication(sessionId, ipAddress string) (authentication *Authentication, user *User, err error) {
@@ -83,6 +93,11 @@ func (auth *Authenticator) GetAuthentication(sessionId, ipAddress string) (authe
 	}
 
 	return authentication, user, nil
+}
+
+func (auth *Authenticator) InsertAuthentication(sessionId string, userId int64, ipAddress string) error {
+	err := auth.db.InsertAuthentication(sessionId, userId, ipAddress)
+	return err
 }
 
 func comparePasswords(hashedPassword, textPassword string) bool {

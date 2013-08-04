@@ -16,6 +16,7 @@ type AuthenticationDatabase struct {
 	getUserByUsername            *sql.Stmt
 	getUserByUsernameAndPassword *sql.Stmt
 	getAuthenticationBySessionId *sql.Stmt
+	deleteAuthentication         *sql.Stmt
 }
 
 func (auth *AuthenticationDatabase) panicOnError(err error) {
@@ -50,6 +51,10 @@ func NewAuthenticationDatabase() *AuthenticationDatabase {
 	auth.panicOnError(err)
 	auth.getAuthenticationBySessionId = authBySession
 
+	delAuth, err := db.Prepare(deleteAutenticationBySessionId)
+	auth.panicOnError(err)
+	auth.deleteAuthentication = delAuth
+
 	return auth
 }
 
@@ -68,7 +73,7 @@ func (auth *AuthenticationDatabase) CreateUser(username, emailAddress, encrypted
 		return -1, err
 	}
 
-	res, err = auth.insertAuthentication.Exec(sessionId, userId, ipAddress)
+	err = auth.InsertAuthentication(sessionId, userId, ipAddress)
 
 	if err != nil {
 		fmt.Println(err)
@@ -78,13 +83,13 @@ func (auth *AuthenticationDatabase) CreateUser(username, emailAddress, encrypted
 	return userId, nil
 }
 
+func (auth *AuthenticationDatabase) InsertAuthentication(sessionId string, userId int64, ipAddress string) error {
+	_, err := auth.insertAuthentication.Exec(sessionId, userId, ipAddress)
+	return err
+}
+
 func (auth *AuthenticationDatabase) GetUserById(id int64) (u *User, err error) {
 	res := auth.getUserById.QueryRow(id)
-
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
 
 	usr := new(User)
 	err = res.Scan(
@@ -140,11 +145,6 @@ func (auth *AuthenticationDatabase) GetUserByUsernameAndPassword(username, passw
 func (auth *AuthenticationDatabase) GetAuth(sessionId string) (authentication *Authentication, user *User, err error) {
 	res := auth.getAuthenticationBySessionId.QueryRow(sessionId)
 
-	if err != nil {
-		fmt.Println(err)
-		return nil, nil, err
-	}
-
 	a := new(Authentication)
 	err = res.Scan(
 		&a.SessionId,
@@ -164,6 +164,10 @@ func (auth *AuthenticationDatabase) GetAuth(sessionId string) (authentication *A
 	}
 
 	return a, usr, nil
+}
+
+func (auth *AuthenticationDatabase) DeleteAuth(sessionId string) {
+	auth.deleteAuthentication.QueryRow(sessionId)
 }
 
 var insertUserSQL string = `
@@ -188,6 +192,11 @@ INSERT INTO gomvc.Authentication (
   ?
 );`
 
+var deleteAutenticationBySessionId string = `
+DELETE FROM gomvc.Authentication
+WHERE SessionId = ?
+;`
+
 var getUserByIdSQL string = `
 SELECT Id, Username, Password, RecoveryEmailAddress
 FROM gomvc.User
@@ -211,4 +220,4 @@ var getAuthenticationBySessionId string = `
 SELECT SessionId, UserId, IPAddress
 FROM gomvc.Authentication
 WHERE SessionId = ?
-`
+;`

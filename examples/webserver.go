@@ -97,6 +97,11 @@ func LoginPostController(ctx *mvc.WebContext, params url.Values) mvc.ControllerR
 	}
 }
 
+func LogoutController(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult {
+	ctx.Logout()
+	return mvc.Redirect("/", ctx)
+}
+
 func handleExistingLogin(ctx *mvc.WebContext, params url.Values) mvc.ControllerResult {
 	username := params.Get("txtUsername")
 	password := params.Get("txtPassword")
@@ -143,6 +148,7 @@ func main() {
 	handler.AddRoute("Json", "/json", mvc.GET, JsonController)
 	handler.AddRoute("Login", "/login", mvc.GET, LoginController)
 	handler.AddRoute("Login Post", "/login", mvc.POST, LoginPostController)
+	handler.AddRoute("Logout", "/logout", mvc.GET, LogoutController)
 	handler.AddRoute("Redirect", "/redirect", mvc.GET, RedirectController)
 
 	http.Handle("/", handler)
