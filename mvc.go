@@ -25,8 +25,10 @@ func (ctx *WebContext) Login(username, password string) (*User, error) {
 }
 
 func (ctx *WebContext) Logout() {
-	sessionId := ctx.Session.Id
+	sessionId, ipAddress := ctx.getSessionIdAndIPAddress()
+	cacheKey := sessionId + ipAddress
 	ctx.mvcHandler.Authenticator.Logout(sessionId)
+	ctx.mvcHandler.userCache.Delete(cacheKey)
 }
 
 func (ctx *WebContext) CreateUser(username, password, emailAddress string) (user *User, err error) {
