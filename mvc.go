@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+var showDebugMessages = false
+
+func debug(msg string) {
+	if showDebugMessages {
+		fmt.Printf("%s\n", msg)
+	}
+}
+
 // WebContext provides access to request and session information
 type WebContext struct {
 	mvcHandler     *MvcHandler
@@ -150,7 +158,10 @@ func (mvc *MvcHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// add parameters from form posts
 	r.ParseForm()
+	debug(fmt.Sprintf("Form values for %s: %v", r.URL.Path, r.Form))
+
 	mergeValues(params, r.Form)
+	debug(fmt.Sprintf("Merged values: %v", params))
 
 	var session *Session
 	if mvc.SessionsEnabled {
@@ -162,6 +173,7 @@ func (mvc *MvcHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	result := route.Controller(ctx, params)
 
 	result.Execute()
+	debug("")
 }
 
 // mergeValues combines url.Values into the the first argument

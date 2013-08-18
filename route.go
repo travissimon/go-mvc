@@ -10,7 +10,7 @@ import (
 )
 
 // parsePathString parses a path string where a named parameter is surrounded
-// in brackets. Returns a regexp that matches the path, and an array of named 
+// in brackets. Returns a regexp that matches the path, and an array of named
 // parameters. For example, parsePathString("/item/{Id}") would return:
 // "/item/(.*)", []string {"Id"}, true
 func parsePathString(path string) (string, []string) {
@@ -74,6 +74,7 @@ func (e MismatchedParameterCountError) Error() string {
 // /p/23 would return {Id:23}
 func (r *Route) GetParameterValues(path string) (url.Values, error) {
 	vals := r.Regexp.FindStringSubmatch(path)
+	debug(fmt.Sprintf("Parameter values for %s: %v\n", path, vals))
 
 	if len(vals) < 2 {
 		return url.Values{}, nil
@@ -147,6 +148,7 @@ func (rh *RouteHandler) GetRouteFromRequest(r *http.Request) (*Route, bool) {
 
 // GetRoute retrieves a route given a URL and request method
 func (rh *RouteHandler) GetRoute(path string, method string) (*Route, bool) {
+	debug("GetRoute, path is: " + path + ", method is: " + method)
 	var routes []*Route
 	switch strings.ToUpper(method) {
 	case "GET":
@@ -173,6 +175,7 @@ func (rh *RouteHandler) GetRoute(path string, method string) (*Route, bool) {
 		}
 
 		indicies := route.Regexp.FindStringIndex(path)
+		debug(fmt.Sprintf("Indicies for path '%s': %v", path, indicies))
 		if len(indicies) == 2 && indicies[0] == 0 && indicies[1] == len(path) {
 			return route, true
 		}
