@@ -34,6 +34,9 @@ func NewAuthenticator() *Authenticator {
 }
 
 func (auth *Authenticator) CreateUser(username, emailAddress, password string, sessionId, ipAddress string) (user *User, err error) {
+
+	fmt.Printf("Creating %s (%s)\n", username, sessionId)
+
 	encrypted, err := encryptPassword(password)
 
 	if err != nil {
@@ -50,6 +53,8 @@ func (auth *Authenticator) CreateUser(username, emailAddress, password string, s
 	user.Username = username
 	user.Password = encrypted
 	user.RecoveryEmailAddress = emailAddress
+
+	fmt.Printf("New id: %d\n", userId)
 
 	return user, err
 }
