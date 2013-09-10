@@ -33,7 +33,7 @@ func NewAuthenticator() *Authenticator {
 	return auth
 }
 
-func (auth *Authenticator) CreateUser(username, emailAddress, password string, sessionId, ipAddress string) (user *User, err error) {
+func (auth *Authenticator) CreateUser(sessionId, ipAddress, username, emailAddress, password string) (user *User, err error) {
 
 	fmt.Printf("Creating %s (%s)\n", username, sessionId)
 

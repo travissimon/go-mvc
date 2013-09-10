@@ -41,7 +41,7 @@ func (ctx *WebContext) Logout() {
 
 func (ctx *WebContext) CreateUser(username, password, emailAddress string) (user *User, err error) {
 	sessionId, ipAddress := ctx.getSessionIdAndIPAddress()
-	return ctx.mvcHandler.Authenticator.CreateUser(username, password, emailAddress, ipAddress, sessionId)
+	return ctx.mvcHandler.Authenticator.CreateUser(sessionId, ipAddress, username, password, emailAddress)
 }
 
 func (ctx *WebContext) IsUserLoggedIn() bool {

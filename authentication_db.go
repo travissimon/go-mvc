@@ -58,8 +58,9 @@ func NewAuthenticationDatabase() *AuthenticationDatabase {
 	return auth
 }
 
-func (auth *AuthenticationDatabase) CreateUser(username, emailAddress, encryptedPassword, sessionId, ipAddress string) (userId int64, err error) {
+func (auth *AuthenticationDatabase) CreateUser(sessionId, ipAddress, username, emailAddress, encryptedPassword string) (userId int64, err error) {
 
+	fmt.Printf("create u: %s, p: %s, em: %s\n", username, encryptedPassword, emailAddress)
 	res, err := auth.insertUser.Exec(username, encryptedPassword, emailAddress)
 
 	if err != nil {
@@ -185,7 +186,7 @@ var insertAuthenticationSQL string = `
 INSERT INTO gomvc.Authentication (
   SessionId,
   UserId,
-  IPAddress
+  IpAddress
 ) VALUES (
   ?,
   ?,
